@@ -33,6 +33,7 @@
 #include <unistd.h>
 extern "C"{
 	#include <vitasdk.h>
+	#include "include/apptool.h"
 }
 #include "include/Archives.h"
 #include "include/luaplayer.h"
@@ -1162,6 +1163,40 @@ static int lua_firmware3(lua_State *L){
 	return 1;
 }
 
+static int lua_install(lua_State *L){
+	int argc = lua_gettop(L);
+	#ifndef SKIP_ERROR_HANDLING
+	if (argc != 1) return luaL_error(L, "wrong number of arguments");
+	#endif
+	char *path = luaL_checkstring(L, 1);
+	int res = installPackage(path);
+	lua_pushboolean(L, res == 0 ? 1 : 0);
+	return 1;
+}
+
+static int lua_removeApp(lua_State *L){
+	int argc = lua_gettop(L);
+	#ifndef SKIP_ERROR_HANDLING
+	if (argc != 1) return luaL_error(L, "wrong number of arguments");
+	#endif
+	char *titleid = luaL_checkstring(L, 1);
+	int res = uninstallPackage(titleid);
+	lua_pushboolean(L, res == 0 ? 1 : 0);
+	return 1;
+}
+
+static int lua_checkApp(lua_State *L){
+	int argc = lua_gettop(L);
+	#ifndef SKIP_ERROR_HANDLING
+	if (argc != 1) return luaL_error(L, "wrong number of arguments");
+	#endif
+	char *titleid = luaL_checkstring(L, 1);
+	int ret = checkPackage(titleid);
+	lua_pushboolean(L, ret ? 1 : 0);
+	return 1;
+}
+
+
 //Register our System Functions
 static const luaL_Reg System_functions[] = {
   {"openFile",                  lua_openfile},
@@ -1228,6 +1263,9 @@ static const luaL_Reg System_functions[] = {
   {"getPsId",                   lua_getpsid},
   {"getFreeSpace",              lua_freespace},
   {"getTotalSpace",             lua_totalspace},
+  {"installApp",				lua_install},
+  {"removeApp",					lua_removeApp},
+  {"checkApp",					lua_checkApp},
   {"getFirmware",               lua_firmware},
   {"getSpoofedFirmware",        lua_firmware2},
   {"getFactoryFirmware",        lua_firmware3},
